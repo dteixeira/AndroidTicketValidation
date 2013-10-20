@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/qr_layout"
 	xmlns:tools="http://schemas.android.com/tools"
    	android:layout_width="wrap_content"
    	android:layout_height="wrap_content"
@@ -34,7 +35,7 @@
 	        android:layout_height="70dp"
 	        android:layout_alignParentBottom="true"
 	        android:text="@string/start_server_text"
-	        android:background="@color/light_slate_gray" />
+	        android:background="@drawable/button" />
 	    
 	</RelativeLayout>
 

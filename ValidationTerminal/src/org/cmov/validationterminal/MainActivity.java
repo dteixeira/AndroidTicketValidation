@@ -2,16 +2,23 @@ package org.cmov.validationterminal;
 
 import org.cmov.validationterminal.bluetooth.BluetoothHelper;
 import org.cmov.validationterminal.bluetooth.BluetoothServerService;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.jwetherell.quick_response_code.data.Contents;
+import com.jwetherell.quick_response_code.qrcode.QRCodeEncoder;
 import android.os.Bundle;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -67,6 +74,19 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		// Indicate the correct button text.
+		if(isServiceRunning) {
+			
+			// Register for broadcast and restart the service.
+			registerReceiver(mConnectionBroadcastReceiver, new IntentFilter(BluetoothServerService.ACTION_BLUETOOTH_SERVICE));
+	    	startService(new Intent(this, BluetoothServerService.class));
+	    	((Button) findViewById(R.id.server_toggle_button)).setText(getResources().getString(R.string.stop_button_text));
+	    	createQRImage();
+		} else {
+			((Button) findViewById(R.id.server_toggle_button)).setText(getResources().getString(R.string.start_button_text));
+			destroyQRImage();
+		}
+		
 		// Add the server button behavior.
 		findViewById(R.id.server_toggle_button).setOnClickListener(mStartServerClickListener);
 	}
@@ -109,8 +129,10 @@ public class MainActivity extends Activity {
 			registerReceiver(mConnectionBroadcastReceiver, new IntentFilter(BluetoothServerService.ACTION_BLUETOOTH_SERVICE));
 	    	startService(new Intent(this, BluetoothServerService.class));
 	    	((Button) findViewById(R.id.server_toggle_button)).setText(getResources().getString(R.string.stop_button_text));
+	    	createQRImage();
 		} else {
 			((Button) findViewById(R.id.server_toggle_button)).setText(getResources().getString(R.string.start_button_text));
+			destroyQRImage();
 		}
 		super.onRestart();
 	}
@@ -140,7 +162,30 @@ public class MainActivity extends Activity {
 	    	registerReceiver(mConnectionBroadcastReceiver, new IntentFilter(BluetoothServerService.ACTION_BLUETOOTH_SERVICE));
 	    	((Button) findViewById(R.id.server_toggle_button)).setText(getResources().getString(R.string.stop_button_text));
 	    	Toast.makeText(getApplicationContext(), getResources().getString(R.string.server_started_text), Toast.LENGTH_SHORT).show();
+	    	createQRImage();
 		}
+	}
+	
+	private void createQRImage() {
+		ImageView imageView = (ImageView) findViewById(R.id.qr_image_view);
+    	QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(
+    			BluetoothAdapter.getDefaultAdapter().getAddress(), 
+    			null, 
+    			Contents.Type.TEXT, 
+    			BarcodeFormat.QR_CODE.toString(), 
+    			imageView.getWidth());
+    	Bitmap bitmap = null;
+		try {
+			bitmap = qrCodeEncoder.encodeAsBitmap();
+		} catch (WriterException e) {}
+        imageView.setImageBitmap(bitmap);
+        findViewById(R.id.qr_layout).setBackgroundResource(R.color.white_color);
+	}
+	
+	private void destroyQRImage() {
+		ImageView imageView = (ImageView) findViewById(R.id.qr_image_view);
+		imageView.setImageBitmap(null);
+		findViewById(R.id.qr_layout).setBackgroundResource(R.color.darkslategray_color);
 	}
 
 	private void stopServerService() {
@@ -149,6 +194,7 @@ public class MainActivity extends Activity {
     	isServiceRunning = false;
     	((Button) findViewById(R.id.server_toggle_button)).setText(getResources().getString(R.string.start_button_text));
     	Toast.makeText(getApplicationContext(), getResources().getString(R.string.server_stopped_text), Toast.LENGTH_SHORT).show();
+    	destroyQRImage();
 	}
 
 }
