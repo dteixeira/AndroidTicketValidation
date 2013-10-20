@@ -1,0 +1,3 @@
+INDEX VERSION 1.126+/home/diogo/Repositories/Android/AndroidTicketValidation/.metadata/.plugins/org.eclipse.jdt.core
+1434834101.index
+2525926828.index

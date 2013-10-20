@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="android.view.View.OnClickListener"/>
+<fullyQualifiedTypeName name="android.content.BroadcastReceiver"/>
+<fullyQualifiedTypeName name="org.cmov.terminalapp.bluetooth.BluetoothServerService"/>
+<fullyQualifiedTypeName name="android.content.IntentFilter"/>
+<fullyQualifiedTypeName name="org.cmov.terminalapp.R.id"/>
+<fullyQualifiedTypeName name="android.widget.Toast"/>
+<fullyQualifiedTypeName name="org.cmov.terminalapp.bluetooth.BluetoothHelper"/>
+<fullyQualifiedTypeName name="org.cmov.terminalapp.R.string"/>
+<fullyQualifiedTypeName name="org.cmov.validationterminal.bluetooth.BluetoothHelper"/>
+<fullyQualifiedTypeName name="org.cmov.validationterminal.bluetooth.BluetoothServerService"/>
+<fullyQualifiedTypeName name="android.bluetooth.BluetoothSocket"/>
+</qualifiedTypeNameHistroy>

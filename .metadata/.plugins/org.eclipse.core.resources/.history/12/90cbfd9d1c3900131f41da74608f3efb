@@ -1,0 +1,40 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+   	android:layout_width="wrap_content"
+   	android:layout_height="wrap_content"
+   	android:orientation="vertical"
+   	android:weightSum="1"
+   	android:background="@color/darkslategray_color" >
+   	
+    <RelativeLayout
+	    android:layout_width="wrap_content" 
+	    android:layout_height="0px"
+	    android:layout_weight="0.1"
+	    android:layout_marginTop="20dp"
+	    android:layout_marginBottom="20dp"
+	    android:layout_marginLeft="10dp"
+	    android:layout_marginRight="10dp" >
+	    
+	    <ImageView
+	        android:id="@+id/qr_image_view"
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	        android:contentDescription="@string/qr_image_text" />
+	    
+	</RelativeLayout>
+ 
+	<RelativeLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="0px"
+	    android:layout_weight="0.9" >
+	
+	    <Button
+	        android:id="@+id/server_toggle_button"
+	        android:layout_width="fill_parent"
+	        android:layout_height="70dp"
+	        android:layout_alignParentBottom="true"
+	        android:text="@string/start_server_text" />
+	    
+	</RelativeLayout>
+
+</LinearLayout>

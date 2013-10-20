@@ -1,0 +1,221 @@
+package org.cmov.validationterminal.bluetooth;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import android.app.IntentService;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
+import android.util.Log;
+
+public class BluetoothServerService extends IntentService {
+
+	/**
+	 * Service constants.
+	 */
+	private static final String SERVICE_NAME = "BluetoothServer";
+	private static final UUID SERVICE_UUID = UUID.fromString("1d49b2b0-3774-11e3-aa6e-0800200c9a66");
+	private static final int SERVICE_SLEEP = 5000;
+	private static final int ACCEPT_TIMEOUT = 15000;
+	private static final int TIMEOUTS_UNTIL_REBOOT = 20;
+	private static final String TAG = "BluetoothServerService";
+
+	/**
+	 * Service broadcast actions.
+	 */
+	public static final String ACTION_BLUETOOTH_SERVICE = "org.cmov.validationterminal.bluetooth.BluetoothServerService";
+	public static final String EXTRA_MAC_ADDR = "MacAddr";
+
+	/**
+	 * Instance variables.
+	 */
+	private BluetoothAdapter btAdapter = null;
+	private BluetoothServerSocket btSocket = null;
+
+	/**
+	 * Class variables.
+	 */
+	private static HashMap<String, BluetoothSocket> btSockets = new HashMap<String, BluetoothSocket>();
+	private static AtomicBoolean isRunning = new AtomicBoolean(false);
+
+	public BluetoothServerService() {
+		super(SERVICE_NAME);
+	}
+
+	/**
+	 * This method is called when an activity sends an intent
+	 * to start the service. Only one instance of the service
+	 * can run globally.
+	 */
+	@Override
+	protected void onHandleIntent(Intent intent) {
+		Log.d(TAG, "onHandleIntent called.");
+		
+		// New intents are ignored if the service is
+		// already running.
+		if(isRunning.get()) {
+			return;
+		} else {
+			isRunning.set(true);
+		}
+		
+		// Run the service while no stop orders come.
+		while (isRunning.get()) {
+			try {
+				// This service can only run if the bluetooth adapter
+				// in on and ready.
+				if (BluetoothHelper.isBluetoothAvailable()) {
+					
+					// Reset all old active connections.
+					Log.d(TAG, "Bluetooth is available.");
+					BluetoothServerService.resetSockets();
+					Log.d(TAG, "Reset socket map.");
+					
+					// Creates a new server socket.
+					btAdapter = BluetoothAdapter.getDefaultAdapter();
+					btSocket = btAdapter.listenUsingInsecureRfcommWithServiceRecord(SERVICE_NAME, SERVICE_UUID);
+					Log.d(TAG, "Server socket created.");
+					int timeouts = 0;
+					
+					// Service only listens while no stop orders come.
+					while (isRunning.get()) {
+						
+						// If the server is running for some time it should
+						// be rebooted.
+						if(timeouts < TIMEOUTS_UNTIL_REBOOT) {
+							try {
+								BluetoothSocket client = btSocket.accept(ACCEPT_TIMEOUT);
+								Log.d(TAG, "Client accepted.");
+								
+								// If there is a valid client connection, it is
+								// added to the map and a broadcast is sent.
+								if (client != null) {
+									BluetoothServerService.addSocket(client);
+									Intent notification = new Intent(ACTION_BLUETOOTH_SERVICE);
+									notification.putExtra(EXTRA_MAC_ADDR, client.getRemoteDevice().getAddress());
+									sendBroadcast(notification);
+									Log.d(TAG, "Sent client received broadcast.");
+								}
+							} catch (IOException e) {
+								
+								// Increment the timeout counter; this ensures the server
+								// will reboot every TIMEOUTS_UNTIL_REBOOT * ACCEPT_TIMEOUT
+								// milliseconds if no new connections occur.
+								timeouts++;
+								Log.d(TAG, "Socket listen timed out.");
+							}
+						} else {
+							try {
+								Log.d(TAG, "Rebooting the server.");
+								
+								// Close the socket, will be restarted briefly.
+								btSocket.close();
+								break;
+							} catch (IOException e) {}
+						}
+					}
+				} else {
+					try {
+						btAdapter = null;
+						btSocket = null;
+						Log.d(TAG, "Service hibernating.");
+						Thread.sleep(SERVICE_SLEEP);
+						Log.d(TAG, "Service waking up.");
+					} catch (InterruptedException e1) {}
+				}
+			} catch (Exception e) {
+				try {
+					btAdapter = null;
+					btSocket = null;
+					Log.d(TAG, "Service hibernating.");
+					Thread.sleep(SERVICE_SLEEP);
+					Log.d(TAG, "Service waking up.");
+				} catch (InterruptedException e1) {}
+			}
+		}
+	}
+
+	/**
+	 * Destroys the service, although realistically the service
+	 * might run for an indefinite period of time after this
+	 * method exits. 
+	 */
+	@Override
+	public void onDestroy() {
+		isRunning.set(false);
+		Log.d(TAG, "Starting connection disposal.");
+		try {
+			BluetoothServerService.resetSockets();
+			if (btSocket != null) {
+				btSocket.close();
+			}
+			Log.d(TAG, "Connections killed.");
+		} catch (IOException e) {
+		}
+		super.onDestroy();
+	}
+
+	/**
+	 * Closes all active sockets.
+	 */
+	private static void resetSockets() {
+		synchronized (BluetoothServerService.btSockets) {
+			for (BluetoothSocket socket : BluetoothServerService.btSockets.values()) {
+				try {
+					socket.getOutputStream().close();
+					socket.getInputStream().close();
+					socket.close();
+				} catch (IOException e) {}
+			}
+			BluetoothServerService.btSockets.clear();
+		}
+	}
+
+	/**
+	 * Adds a new sockets to the map. Closes any pre existing one from
+	 * the same client.
+	 */
+	private static void addSocket(BluetoothSocket socket) {
+		synchronized (BluetoothServerService.btSockets) {
+			BluetoothSocket oldSocket = BluetoothServerService.btSockets.get(socket.getRemoteDevice().getAddress());
+			if(oldSocket != null) {
+				try {
+					oldSocket.getOutputStream().close();
+					oldSocket.getInputStream().close();
+					oldSocket.close();
+				} catch (IOException e) {}
+			}
+			btSockets.put(socket.getRemoteDevice().getAddress(), socket);
+		}
+	}
+
+	/**
+	 * Returns an available connection for the given
+	 * MAC address.
+	 */
+	public static BluetoothSocket getSocket(String macAddr) {
+		BluetoothSocket socket = null;
+		synchronized (BluetoothServerService.btSockets) {
+			socket = BluetoothServerService.btSockets.remove(macAddr);
+		}
+		return socket;
+	}
+	
+	/**
+	 * Closes a connection from a specific MAC address.
+	 */
+	public static void closeSocket(String macAddr) {
+		synchronized (BluetoothServerService.btSockets) {
+			BluetoothSocket socket = BluetoothServerService.btSockets.remove(macAddr);
+			try {
+				socket.getOutputStream().close();
+				socket.getInputStream().close();
+				socket.close();
+			} catch (IOException e) {}
+		}
+	}
+
+}
