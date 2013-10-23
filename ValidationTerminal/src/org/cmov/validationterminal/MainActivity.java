@@ -2,10 +2,15 @@ package org.cmov.validationterminal;
 
 import org.cmov.validationterminal.bluetooth.BluetoothHelper;
 import org.cmov.validationterminal.bluetooth.BluetoothServerService;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.jwetherell.quick_response_code.data.Contents;
 import com.jwetherell.quick_response_code.qrcode.QRCodeEncoder;
+
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -153,6 +158,14 @@ public class MainActivity extends Activity {
 	 */
 
 	private void startServerService() {
+		
+		// Enable WIFI.
+		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		if(wifi != null && !wifi.isWifiEnabled()) {
+			wifi.setWifiEnabled(true);
+		}
+		
+		// Enable bluetooth.
 		if(!BluetoothHelper.isBluetoothAvailable()) {
 			BluetoothHelper.bluetoothEnable(this, true, REQUEST_ENABLE_BLUETOOTH);
 		} else {
@@ -168,8 +181,12 @@ public class MainActivity extends Activity {
 	
 	private void createQRImage() {
 		ImageView imageView = (ImageView) findViewById(R.id.qr_image_view);
+		JSONObject json = new JSONObject();
+		try {
+			json.put("bus", BluetoothAdapter.getDefaultAdapter().getAddress());
+		} catch (JSONException e1) {}
     	QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(
-    			BluetoothAdapter.getDefaultAdapter().getAddress(), 
+    			json.toString(), 
     			null, 
     			Contents.Type.TEXT, 
     			BarcodeFormat.QR_CODE.toString(), 

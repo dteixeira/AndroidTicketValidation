@@ -8,18 +8,43 @@
    	android:background="@color/darkslategray_color" >
    	
     <RelativeLayout
+        android:id="@+id/ticket_color"
 	    android:layout_width="wrap_content" 
 	    android:layout_height="0px"
 	    android:layout_weight="0.9"
-	    android:layout_marginTop="20dp"
-	    android:layout_marginBottom="20dp"
-	    android:layout_marginLeft="10dp"
-	    android:layout_marginRight="10dp" >
-	    
-        <ImageView
-	        android:id="@+id/qr_image_view"
-	        android:layout_width="fill_parent"
-	        android:layout_height="fill_parent" />
+	    android:layout_margin="20dp" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/ticket_status"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:gravity="center"
+                android:paddingBottom="10dp"
+                android:textSize="20sp"
+                android:padding="5dp"
+                android:typeface="monospace"
+                android:layout_weight="0.2" />
+
+            <TextView
+                android:id="@+id/ticket_message"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_weight="0.7"
+                android:gravity="center_vertical"
+                android:padding="15dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textSize="14sp"
+                android:typeface="monospace" />
+
+        </LinearLayout>
 	    
 	</RelativeLayout>
 

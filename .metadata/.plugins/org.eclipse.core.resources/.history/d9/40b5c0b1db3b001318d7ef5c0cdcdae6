@@ -1,0 +1,12 @@
+package org.cmov.ticketinspector;
+
+import android.bluetooth.BluetoothSocket;
+
+public interface HttpRequestResultCallback {
+	
+	/**
+	 * Called when a bluetooth connection is established.
+	 */
+	public void onRequestResult(boolean result, BluetoothSocket socket);
+
+}

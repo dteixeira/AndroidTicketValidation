@@ -49,5 +49,7 @@
     <color name="white_color">#ffffff</color>
     <string name="download_data_button_text">Download data</string>
     <string name="validate_ticket_button_text">Validate ticket</string>
+    <color name="ticket_green">#6EF088</color>
+    <color name="ticket_red">#fb3a3d</color>
 
 </resources>

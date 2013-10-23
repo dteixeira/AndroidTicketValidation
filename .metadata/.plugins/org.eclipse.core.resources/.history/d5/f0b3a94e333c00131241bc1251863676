@@ -1,0 +1,76 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/qr_layout"
+	xmlns:tools="http://schemas.android.com/tools"
+   	android:layout_width="wrap_content"
+   	android:layout_height="wrap_content"
+   	android:orientation="vertical"
+   	android:weightSum="1"
+   	android:background="@color/darkslategray_color" >
+   	
+    <RelativeLayout
+        android:id="@+id/ticket_color"
+	    android:layout_width="wrap_content" 
+	    android:layout_height="0px"
+	    android:layout_weight="0.9"
+	    android:layout_margin="20dp" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/ticket_status"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:gravity="center"
+                android:paddingBottom="10dp"
+                android:textSize="20sp"
+                android:padding="5dp"
+                android:typeface="monospace"
+                android:layout_weight="0.2" />
+
+            <TextView
+                android:id="@+id/ticket_message"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.7"
+                android:textSize="12sp"
+                android:padding="15dp"
+                android:typeface="monospace"
+              	android:layout_gravity="center_vertical"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        </LinearLayout>
+	    
+	</RelativeLayout>
+
+    <LinearLayout 
+        android:layout_width="fill_parent"
+	   	android:layout_height="0px"
+    	android:layout_weight="0.1"
+	   	android:orientation="horizontal"
+	   	android:weightSum="1"
+	   	android:background="@color/darkslategray_color">
+	   	
+        <Button
+	        android:id="@+id/download_data_button"
+	        android:layout_weight="0.5"
+	        android:layout_height="70dp"
+	        android:layout_width="fill_parent"
+	        android:background="@drawable/button"
+	        android:text="@string/download_data_button_text" />
+        
+        <Button
+	        android:id="@+id/validate_ticket_button"
+	        android:layout_weight="0.5"
+	        android:layout_height="70dp"
+	        android:layout_width="fill_parent"
+	        android:background="@drawable/button"
+	        android:text="@string/validate_ticket_button_text" />
+        
+    </LinearLayout>
+
+</LinearLayout>

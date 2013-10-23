@@ -1,20 +1,36 @@
 package org.cmov.ticketinspector;
 
+import java.util.ArrayList;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements HttpRequestResultCallback {
 
+	public static final int DOWNLOAD_DATA_CALLBACK = 1000003;
+	public static final String SERVER_URL = "http://192.168.1.64:4567";
+	public static final String BUS_MAC_ADDRESS_PARAMETER = "bus";
+	public static final String TICKET_ID_PARAMETER = "ticket_id";
+	public static final String USER_ID_PARAMETER = "user_id";
+	public static final String TICKETS_PARAMETER = "tickets";
 	public static final int REQUEST_QR_TERMINAL = 1000001;
 	public static final int REQUEST_QR_CLIENT = 1000002;
 	public static final String EXTRA_QR_DECODE = "QRContent";
 	private static final String TAG = MainActivity.class.getSimpleName();
+	
+	private ArrayList<Ticket> tickets = new ArrayList<Ticket>();
 	
 	/**
 	 * Listener definitions.
@@ -62,17 +78,52 @@ public class MainActivity extends Activity {
 	}
 	
 	private void manageDownloadDataQRCode(Intent data) {
-		// TODO
-		Toast.makeText(getApplicationContext(),
-				"Download data: " + data.getExtras().getCharSequence(EXTRA_QR_DECODE),
-				Toast.LENGTH_SHORT).show();
+		try {
+			findViewById(R.id.qr_layout).setBackgroundResource(R.color.darkslategray_color);
+			JSONObject json = new JSONObject(data.getExtras().getCharSequence(EXTRA_QR_DECODE).toString());
+			HttpRequestAsyncTask task = new HttpRequestAsyncTask(this,
+					HttpRequestAsyncTask.HttpRequestType.Post,
+					json, 
+					SERVER_URL + "/tickets/list", 
+					"Download ticket data...",
+					DOWNLOAD_DATA_CALLBACK);
+			task.execute(new Void[] {});
+		} catch (Exception e) {}
 	}
 	
 	private void manageValidateTicketQRCode(Intent data) {
-		// TODO
-		Toast.makeText(getApplicationContext(),
-				"Validate ticket: " + data.getExtras().getCharSequence(EXTRA_QR_DECODE),
-				Toast.LENGTH_SHORT).show();
+		try {
+			JSONObject json = new JSONObject(data.getExtras().getCharSequence(EXTRA_QR_DECODE).toString());
+			int ticketId = json.getInt(TICKET_ID_PARAMETER);
+			int userId = json.getInt(USER_ID_PARAMETER);
+			for(Ticket ticket : tickets) {
+				if(ticket.getId() == ticketId) {
+					if(ticket.getUserId() == userId) {
+						findViewById(R.id.ticket_color).setBackgroundResource(R.color.ticket_green);
+						((TextView) findViewById(R.id.ticket_status)).setText("VALID TICKET");
+						((TextView) findViewById(R.id.ticket_message)).setText(
+								"TICKET ID : " + ticket.getId() + "\n" +
+								"USER ID   : " + ticket.getUserId() + "\n" +
+								"VALIDITY  : " + ticket.getValidityTime() + "\n" +
+								"VALIDATED : " + ticket.getValidatedAt().toString());
+						return;
+					} else {
+						findViewById(R.id.ticket_color).setBackgroundResource(R.color.ticket_red);
+						((TextView) findViewById(R.id.ticket_status)).setText("INVALID TICKET");
+						((TextView) findViewById(R.id.ticket_message)).setText("Ticket does not belong to user.");
+						return;
+					}
+				}
+			}
+			findViewById(R.id.ticket_color).setBackgroundResource(R.color.ticket_red);
+			((TextView) findViewById(R.id.ticket_status)).setText("INVALID TICKET");
+			((TextView) findViewById(R.id.ticket_message)).setText("Ticket not found in validated tickets list.");
+		} catch (Exception e) {
+			findViewById(R.id.ticket_color).setBackgroundResource(R.color.darkslategray_color);
+			((TextView) findViewById(R.id.ticket_status)).setText(null);
+			((TextView) findViewById(R.id.ticket_message)).setText(null);
+			Toast.makeText(getApplicationContext(), "A problem occured.", Toast.LENGTH_SHORT).show();
+		}
 	}
 	
 	/**
@@ -85,6 +136,12 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		((Button) findViewById(R.id.download_data_button)).setOnClickListener(mDownloadDataClickListener);
 		((Button) findViewById(R.id.validate_ticket_button)).setOnClickListener(mValidateTicketClickListener);
+		
+		// Enable WIFI.
+		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		if(wifi != null && !wifi.isWifiEnabled()) {
+			wifi.setWifiEnabled(true);
+		}
 	}
 
 	@Override
@@ -92,6 +149,33 @@ public class MainActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		// getMenuInflater().inflate(R.menu.main, menu);
 		return true;
+	}
+
+	@Override
+	public void onRequestResult(boolean result, JSONObject data, int requestCode) {
+		switch(requestCode) {
+		
+		case DOWNLOAD_DATA_CALLBACK:
+			try {
+				JSONArray array = data.getJSONArray(TICKETS_PARAMETER);
+				tickets = new ArrayList<Ticket>();
+				for(int i = 0; i < array.length(); ++i) {
+					tickets.add(new Ticket(array.getJSONObject(i)));
+				}
+				Toast.makeText(getApplicationContext(), 
+						"Ticket data received.", 
+						Toast.LENGTH_SHORT).show();
+			} catch (JSONException e) {
+				Log.e(TAG, "Failed to get tickets.", e);
+				Toast.makeText(getApplicationContext(), 
+						"Failed to get tickets.", 
+						Toast.LENGTH_SHORT).show();
+			}
+			break;
+			
+		default:
+			break;
+		}
 	}
 
 }

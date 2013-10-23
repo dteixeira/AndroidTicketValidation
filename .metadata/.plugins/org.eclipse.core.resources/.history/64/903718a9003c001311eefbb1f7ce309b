@@ -1,0 +1,5 @@
+package org.cmov.ticketinspector;
+
+public class Ticket {
+
+}
