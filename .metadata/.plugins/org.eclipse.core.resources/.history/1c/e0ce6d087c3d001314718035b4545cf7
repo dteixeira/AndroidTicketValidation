@@ -1,0 +1,7 @@
+package org.cmov.ticketclient;
+
+import android.support.v4.app.Fragment;
+
+public class TicketBuyFragment extends Fragment {
+
+}

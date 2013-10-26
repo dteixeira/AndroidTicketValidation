@@ -1,0 +1,66 @@
+package org.cmov.ticketclient;
+
+import java.util.Locale;
+
+import android.app.Activity;
+import android.content.Context;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+
+public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+	private Activity context = null;
+
+	public SectionsPagerAdapter(FragmentManager fm, Activity context) {
+		super(fm);
+		this.context = null;
+	}
+
+	@Override
+	public Fragment getItem(int position) {
+
+		// TODO Set fragment arguments.
+		switch (position) {
+		case 0:
+			Fragment  fragment = new TicketBuyFragment();
+			Bundle args = new Bundle();
+			fragment.setArguments(args);
+			return fragment;
+			break;
+
+		case 1:
+
+			break;
+
+		default:
+			break;
+		}
+
+		// getItem is called to instantiate the fragment for the given page.
+		// Return a DummySectionFragment (defined as a static inner class
+		// below) with the page number as its lone argument.
+		Fragment fragment = new DummySectionFragment();
+		Bundle args = new Bundle();
+		args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position + 1);
+		fragment.setArguments(args);
+		return fragment;
+	}
+
+	@Override
+	public int getCount() {
+		return 2;
+	}
+
+	@Override
+	public CharSequence getPageTitle(int position) {
+		switch (position) {
+		case 0:
+			return context.getString(R.string.title_buy_tickets);
+		case 1:
+			return context.getString(R.string.title_list_tickets);
+		}
+		return null;
+	}
+}

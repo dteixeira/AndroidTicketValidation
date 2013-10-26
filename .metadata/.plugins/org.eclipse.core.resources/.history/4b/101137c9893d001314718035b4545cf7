@@ -1,0 +1,76 @@
+package org.cmov.ticketclient;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.ViewPager;
+import android.view.Menu;
+
+public class MainActivity extends FragmentActivity {
+
+	public static final String REGISTER_PREFS = "RegisterDone";
+	public static final String REGISTERED = "Registered";
+	public static final String EXTRA_REGISTERED = "ExtraRegistered";
+	public static final String EXTRA_USER_ID = "ExtraUserId";
+	public static final int REQUEST_REGISTER = 1000001;
+	
+	private boolean registered = false;
+	private int userId = -1;
+	
+	SectionsPagerAdapter mSectionsPagerAdapter;
+	ViewPager mViewPager;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), this);
+
+		// Set up the ViewPager with the sections adapter.
+		mViewPager = (ViewPager) findViewById(R.id.pager);
+		mViewPager.setAdapter(mSectionsPagerAdapter);
+		
+		 // Restore preferences
+	     SharedPreferences settings = getSharedPreferences(REGISTER_PREFS, 0);
+	     registered = settings.getBoolean(REGISTERED, false);
+	     manageRegister();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		// getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// Register user request.
+		if(requestCode == REQUEST_REGISTER) {
+			// Register canceled, quit.
+			if(resultCode == Activity.RESULT_CANCELED) {
+				finish();
+			} else {
+				SharedPreferences settings = getSharedPreferences(REGISTER_PREFS, 0);
+				SharedPreferences.Editor editor = settings.edit();
+				registered = data.getBooleanExtra(EXTRA_REGISTERED, false);
+				userId = data.getIntExtra(EXTRA_USER_ID, -1);
+				
+				editor.putBoolean(REGISTERED, data.getBooleanExtra(EXTRA_REGISTERED, false));
+
+				// Commit the edits!
+				editor.commit();
+			}
+		}
+	}
+	
+	private void manageRegister() {
+		if(!registered) {
+			Intent intent = new Intent(getApplicationContext(), RegisterActivity.class);
+			startActivityForResult(intent, REQUEST_REGISTER);
+		}
+	}
+
+}
