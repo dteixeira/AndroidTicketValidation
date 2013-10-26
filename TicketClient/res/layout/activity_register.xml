@@ -42,12 +42,12 @@
 			</EditText>
 			
 			<EditText
-			    android:id="@+id/email"
+			    android:id="@+id/login"
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:layout_marginTop="15dp"
-			    android:hint="@string/prompt_email"
-			    android:inputType="textEmailAddress"
+			    android:hint="@string/prompt_login"
+			    android:inputType="textNoSuggestions"
 			    android:maxLines="1"
 			    android:singleLine="true" />
 			
