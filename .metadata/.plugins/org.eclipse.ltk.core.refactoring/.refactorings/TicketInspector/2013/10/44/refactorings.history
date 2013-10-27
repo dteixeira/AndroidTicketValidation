@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;Ticket.java&apos; to &apos;TicketClient/src/org.cmov.ticketclient&apos;&#x0A;- Original project: &apos;TicketInspector&apos;&#x0A;- Destination element: &apos;TicketClient/src/org.cmov.ticketclient&apos;&#x0A;- Original element: &apos;org.cmov.ticketinspector.Ticket.java&apos;" description="Copy compilation unit" destination="=TicketClient/src&lt;org.cmov.ticketclient" element1="/src&lt;org.cmov.ticketinspector{Ticket.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1382882162144" units="1" version="1.0"/>
+</session>
