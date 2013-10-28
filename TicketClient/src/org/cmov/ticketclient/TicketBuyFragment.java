@@ -9,8 +9,6 @@ import android.view.ViewGroup;
 public class TicketBuyFragment extends Fragment {
 	
 	public TicketBuyFragment() {
-		// TODO Setup fragment.
-		setRetainInstance(true);
 	}
 	
 	@Override

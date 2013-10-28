@@ -22,6 +22,9 @@ public class Ticket implements Serializable {
 	private Date validatedAt = null;
 	private int validityTime = -1;
 	
+	public Ticket() {
+	}
+	
 	public Ticket(JSONObject json) {
 		try {
 			this.id = json.getInt("id");

@@ -4,12 +4,10 @@ import org.cmov.validationterminal.bluetooth.BluetoothHelper;
 import org.cmov.validationterminal.bluetooth.BluetoothServerService;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.jwetherell.quick_response_code.data.Contents;
 import com.jwetherell.quick_response_code.qrcode.QRCodeEncoder;
-
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.app.Activity;
@@ -32,7 +30,9 @@ public class MainActivity extends Activity {
 	 * Constant definitions.
 	 */
 	
-	private static final int REQUEST_ENABLE_BLUETOOTH = 100001;
+	public static final String SERVER_URL = "http://192.168.1.64:4567";
+	private static final int REQUEST_ENABLE_BLUETOOTH = 10001;
+	private static final String TAG = MainActivity.class.getSimpleName();
 
 	/**
 	 * Instance variables.
@@ -63,10 +63,13 @@ public class MainActivity extends Activity {
 		
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			String mac = (String) intent.getExtras().get(BluetoothServerService.EXTRA_MAC_ADDR);
-			BluetoothSocket socket = BluetoothServerService.getSocket(mac);
-			BluetoothHelper.bluetoothWriteObject(new String("Hello, world!"), socket);
-			Toast.makeText(getApplicationContext(), "New user connected: " + mac, Toast.LENGTH_SHORT).show();
+			try {
+				String mac = (String) intent.getExtras().get(BluetoothServerService.EXTRA_MAC_ADDR);
+				BluetoothSocket socket = BluetoothServerService.getSocket(mac);
+				ValidateTicketAsyncTask task = new ValidateTicketAsyncTask(socket);
+				task.execute((Void[])null);
+				Toast.makeText(getApplicationContext(), "New user connected: " + mac, Toast.LENGTH_SHORT).show();
+			} catch (Exception e) {}
 		}
 	};
 

@@ -1,0 +1,53 @@
+package org.cmov.ticketclient;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.jwetherell.quick_response_code.data.Contents;
+import com.jwetherell.quick_response_code.qrcode.QRCodeEncoder;
+
+import android.bluetooth.BluetoothAdapter;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+
+public class TicketPresentFragment extends Fragment {
+	
+	public TicketPresentFragment() {
+	}
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		// TODO Setup layout.
+		View root = inflater.inflate(R.layout.fragment_present_ticket, container, false);
+		return root;
+	}
+	
+	private void updateQRImage() {
+		View view = getView();
+		ImageView imageView = (ImageView) view.findViewById(R.id.qr_image_view);
+		JSONObject json = new JSONObject();
+		try {
+			json.put("bus", BluetoothAdapter.getDefaultAdapter().getAddress());
+		} catch (JSONException e1) {}
+    	QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(
+    			json.toString(), 
+    			null, 
+    			Contents.Type.TEXT, 
+    			BarcodeFormat.QR_CODE.toString(), 
+    			imageView.getWidth());
+    	Bitmap bitmap = null;
+		try {
+			bitmap = qrCodeEncoder.encodeAsBitmap();
+		} catch (WriterException e) {}
+        imageView.setImageBitmap(bitmap);
+        findViewById(R.id.qr_layout).setBackgroundResource(R.color.white_color);
+	}
+
+}

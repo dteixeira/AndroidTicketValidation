@@ -1,0 +1,358 @@
+package org.cmov.ticketclient;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import org.cmov.ticketclient.HttpRequestAsyncTask.HttpRequestType;
+import org.cmov.validationterminal.bluetooth.BluetoothConnectionAsyncTask;
+import org.cmov.validationterminal.bluetooth.BluetoothConnectionResultCallback;
+import org.cmov.validationterminal.bluetooth.BluetoothHelper;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.ListFragment;
+import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
+
+public class MainActivity extends FragmentActivity 
+	implements HttpRequestResultCallback, BluetoothConnectionResultCallback,
+		ValidateTicketResultCallback {
+
+	private static final String TAG = MainActivity.class.getSimpleName();
+	public static final String SERVER_URL = "http://192.168.1.64:4567";
+	public static final String TICKETS_URL = "/tickets/";
+	public static final String REGISTER_PREFS = "RegisterDone";
+	public static final String REGISTERED = "Registered";
+	public static final String USER_ID = "UserId";
+	public static final String USER_LOGIN = "UserLogin";
+	public static final String EXTRA_REGISTERED = "ExtraRegistered";
+	public static final String EXTRA_USER_ID = "ExtraUserId";
+	public static final String EXTRA_USER_LOGIN = "ExtraUserLogin";
+	public static final String EXTRA_QR_DECODE = "QRDecode";
+	public static final String REQUEST_SUCCESS = "success";
+	public static final String EXTRA_QR_TICKET = "QRTicket";
+	public static final int REQUEST_REGISTER = 10001;
+	public static final int REQUEST_TICKETS = 10002;
+	public static final int REQUEST_QR_VALIDATE = 10003;
+	public static final String TICKETS_PARAMETER = "tickets";
+	
+	/** Private backup files **/
+	
+	private static final String USED_TICKETS_FILE = "used_file";
+	private static final String UNUSED_TICKETS_FILE = "unused_file";
+	
+	private boolean registered = false;
+	private int userId = -1;
+	private String userLogin = null;
+	
+	SectionsPagerAdapter mSectionsPagerAdapter;
+	ArrayList<Fragment> fragments;
+	ArrayList<String> fragmentNames;
+	UnusedTicketAdapter mUnusedTicketsAdapter;
+	UsedTicketAdapter mUsedTicketsAdapter;
+	ViewPager mViewPager;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+
+		// Set up the ViewPager with the sections adapter.
+		setupFragments();
+		mViewPager = (ViewPager) findViewById(R.id.pager);
+		mViewPager.setAdapter(mSectionsPagerAdapter);
+		
+		// Restore preferences
+		restorePreferences();
+	}
+	
+	private void restorePreferences() {
+		SharedPreferences settings = getSharedPreferences(REGISTER_PREFS, 0);
+		registered = settings.getBoolean(REGISTERED, false);
+		userId = settings.getInt(USER_ID, -1);
+		userLogin = settings.getString(USER_LOGIN, null);
+		manageRegister();
+	}
+	
+	private void setupFragments() {
+		fragments = new ArrayList<Fragment>();
+		fragmentNames = new ArrayList<String>();
+		
+		// Setup adapters.
+		mUnusedTicketsAdapter = new UnusedTicketAdapter(this, new ArrayList<Ticket>());
+		mUsedTicketsAdapter = new UsedTicketAdapter(this, new ArrayList<Ticket>());
+		
+		// Setup fragments and bind adapters.
+		ListFragment unusedTicketsFragment = new TicketUnusedFragment();
+		unusedTicketsFragment.setListAdapter(mUnusedTicketsAdapter);
+		fragments.add(unusedTicketsFragment);
+		ListFragment usedTicketsFragment = new TicketUsedFragment();
+		usedTicketsFragment.setListAdapter(mUsedTicketsAdapter);
+		fragments.add(usedTicketsFragment);
+		fragments.add(new TicketPresentFragment());
+		fragments.add(new TicketBuyFragment());
+		
+		// Setup fragment names.
+		fragmentNames.add(getString(R.string.title_unused_tickets));
+		fragmentNames.add(getString(R.string.title_used_tickets));
+		fragmentNames.add(getString(R.string.title_present_ticket));
+		fragmentNames.add(getString(R.string.title_buy_tickets));
+		
+		// Setup pager adapter.
+		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), fragments, fragmentNames);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_refresh:
+			getTicketsServer();
+			return true;
+			
+		case R.id.action_delete_cache:
+			deleteHistory();
+			return true;
+
+		default:
+			return false;
+		}
+	}
+	
+	private void deleteHistory() {
+		mUsedTicketsAdapter.getTickets().clear();
+		mUsedTicketsAdapter.notifyDataSetChanged();
+		Toast.makeText(getApplicationContext(), "History cleared.", Toast.LENGTH_SHORT).show();
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// Register user request.
+		if(requestCode == REQUEST_REGISTER) {
+			// Register canceled, quit.
+			if(resultCode == Activity.RESULT_CANCELED) {
+				finish();
+			} else {
+				SharedPreferences settings = getSharedPreferences(REGISTER_PREFS, 0);
+				SharedPreferences.Editor editor = settings.edit();
+				registered = data.getBooleanExtra(EXTRA_REGISTERED, false);
+				userId = data.getIntExtra(EXTRA_USER_ID, -1);
+				userLogin = data.getStringExtra(EXTRA_USER_LOGIN);
+				editor.putBoolean(REGISTERED, registered);
+				editor.putInt(USER_ID, userId);
+				editor.putString(USER_LOGIN, userLogin);
+				editor.commit();
+				getTicketsServer();
+			}
+		} else if(requestCode == REQUEST_QR_VALIDATE && resultCode == Activity.RESULT_OK) {
+			try {
+				Ticket ticket = (Ticket) data.getSerializableExtra(EXTRA_QR_TICKET);
+				JSONObject json = new JSONObject(data.getStringExtra(EXTRA_QR_DECODE));
+				String mac = json.getString("bus");
+				Log.d(TAG, "BUS MAC: " + mac);
+				BluetoothConnectionAsyncTask task = new BluetoothConnectionAsyncTask(this, mac, ticket);
+				task.execute((Void[])null);
+			} catch (JSONException e) {
+				Log.e(TAG, "Connection start failed.", e);
+			}
+		}
+	}
+	
+	private void manageRegister() {
+		if(!registered) {
+			Intent intent = new Intent(getApplicationContext(), RegisterActivity.class);
+			startActivityForResult(intent, REQUEST_REGISTER);
+		} else {
+			getTicketsLocal();
+		}
+	}
+	
+	private void getTicketsLocal() {
+		getUnusedTicketsLocal();
+		getUsedTicketsLocal();
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void getUsedTicketsLocal() {
+		try {
+			FileInputStream used = openFileInput(USED_TICKETS_FILE);
+			ObjectInputStream oUsed = new ObjectInputStream(used);
+			ArrayList<Ticket> usedTickets = (ArrayList<Ticket>) oUsed.readObject();
+			oUsed.close();
+			used.close();
+			mUsedTicketsAdapter.setTickets(usedTickets);
+			mUsedTicketsAdapter.notifyDataSetChanged();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "No history to load.", e);
+		} catch (Exception e) {
+			Log.e(TAG, "ObjectInputStream failed.", e);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void getUnusedTicketsLocal() {
+		try {
+			FileInputStream unused = openFileInput(UNUSED_TICKETS_FILE);
+			ObjectInputStream oUnused = new ObjectInputStream(unused);
+			ArrayList<Ticket> unusedTickets = (ArrayList<Ticket>) oUnused.readObject();
+			oUnused.close();
+			unused.close();
+			mUnusedTicketsAdapter.setTickets(unusedTickets);
+			mUnusedTicketsAdapter.notifyDataSetChanged();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "No tickets to load.", e);
+		} catch (Exception e) {
+			Log.e(TAG, "ObjectInputStream failed.", e);
+		}
+		
+	}
+	
+	private void getTicketsServer() {
+		// Enable WIFI.
+		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		if(wifi != null && wifi.isWifiEnabled()) {
+			HttpRequestAsyncTask task = new HttpRequestAsyncTask(this, 
+					HttpRequestType.Get,
+					null,
+					SERVER_URL + TICKETS_URL + userLogin,
+					"Fetching tickets from server.",
+					REQUEST_TICKETS);
+			task.execute((Void[]) null);
+		} else {
+			Toast.makeText(getApplicationContext(), 
+					"You need an active network connection. " +
+					"Please enable it and try again.", Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	@Override
+	public void onRequestResult(boolean result, JSONObject data, int requestCode) {
+		switch(requestCode) {
+
+		case REQUEST_TICKETS:
+			try {
+				JSONArray array = data.getJSONArray(TICKETS_PARAMETER);
+				ArrayList<Ticket> tickets = new ArrayList<Ticket>();
+				for(int i = 0; i < array.length(); ++i) {
+					tickets.add(new Ticket(array.getJSONObject(i)));
+				}
+				mUnusedTicketsAdapter.setTickets(tickets);
+				mUnusedTicketsAdapter.notifyDataSetChanged();
+			} catch (JSONException e) {
+				Log.e(TAG, "Failed to get tickets. " + data.toString() +
+						" " + SERVER_URL + TICKETS_URL + userLogin, e);
+				Toast.makeText(getApplicationContext(), 
+						"Failed to retrieve tickets.", 
+						Toast.LENGTH_SHORT).show();
+			}
+			break;
+
+		default:
+			break;
+		}
+	}
+	
+	@Override
+	protected void onStop() {
+		saveUsedTickets();
+		saveUnusedTickets();
+		super.onStop();
+	}
+	
+	private void saveUsedTickets() {
+		try {
+			ArrayList<Ticket> used = mUsedTicketsAdapter.getTickets();
+			FileOutputStream osUsed = openFileOutput(USED_TICKETS_FILE, MODE_PRIVATE);
+			ObjectOutputStream oosUsed = new ObjectOutputStream(osUsed);
+			oosUsed.writeObject(used);
+			oosUsed.close();
+			osUsed.close();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "Failed to save tickets.", e);
+		} catch (Exception e) {
+			Log.e(TAG, "ObjectOutputStream failed.", e);
+		}
+	}
+	
+	private void saveUnusedTickets() {
+		try {
+			ArrayList<Ticket> unused = mUnusedTicketsAdapter.getTickets();
+			FileOutputStream osUnused = openFileOutput(UNUSED_TICKETS_FILE, MODE_PRIVATE);
+			ObjectOutputStream oosUnused = new ObjectOutputStream(osUnused);
+			oosUnused.writeObject(unused);
+			oosUnused.close();
+			osUnused.close();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "Failed to save tickets.", e);
+		} catch (Exception e) {
+			Log.e(TAG, "ObjectOutputStream failed.", e);
+		}
+	}
+	
+	public void onUnusedTicketClick(int index) {
+		if(BluetoothHelper.isBluetoothAvailable()) {
+			final Ticket ticket = mUnusedTicketsAdapter.getTickets().get(index);
+			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+			alertDialog.setTitle("Validate");
+			String type = ticket.getValidityTime() == 15 ? "Ticket T1" : (ticket.getValidityTime() == 30 ? "Ticket T2" : "Ticket T3"); 
+			alertDialog.setMessage(type + "\n\nAre you sure you want to validate this ticket?");
+			
+			// Back button.
+			alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "No", new AlertDialog.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface arg0, int arg1) {}
+			});
+	
+			// Ok button.
+			alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", new AlertDialog.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface arg0, int arg1) {
+					validateTicket(ticket);
+				}
+			});
+			alertDialog.show();
+		} else {
+			Toast.makeText(getApplicationContext(), 
+					"You need an active bluetooth connection. " +
+					"Please enable it and try again.", Toast.LENGTH_SHORT).show();
+		}
+	}
+	
+	private void validateTicket(Ticket ticket) {
+		Intent intent = new Intent(getApplicationContext(), CaptureActivity.class);
+		intent.putExtra(EXTRA_QR_TICKET, ticket);
+		startActivityForResult(intent, REQUEST_QR_VALIDATE);
+	}
+
+	@Override
+	public void onConnectionResult(boolean result, BluetoothSocket socket, Object param) {
+		if(result) {
+			ValidateTicketAsyncTask task = new ValidateTicketAsyncTask(
+					this, (Ticket)param, socket, userLogin);
+		}
+	}
+
+}

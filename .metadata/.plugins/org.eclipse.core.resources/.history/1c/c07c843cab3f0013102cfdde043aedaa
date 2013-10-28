@@ -1,0 +1,54 @@
+package org.cmov.ticketclient;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.view.View;
+import android.view.ViewGroup;
+
+public class SectionsPagerAdapter extends FragmentPagerAdapter implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	private Activity context = null;
+	private ArrayList<Fragment> fragments = null;
+	
+	public void setContext(Activity context) {
+		this.context = context;
+	}
+
+	public SectionsPagerAdapter(FragmentManager fm, Activity context, ArrayList<Fragment> fragments) {
+		super(fm);
+		this.context = context;
+		this.fragments = fragments;
+	}
+
+	@Override
+	public Fragment getItem(int position) {
+		return fragments.get(position);
+	}
+
+	@Override
+	public int getCount() {
+		return fragments.size();
+	}
+
+	@Override
+	public CharSequence getPageTitle(int position) {
+		switch (position) {
+		case 0:
+			return context.getString(R.string.title_unused_tickets);
+		case 1:
+			return context.getString(R.string.title_used_tickets);
+		case 2:
+			return context.getString(R.string.title_present_ticket);
+		case 3:
+			return context.getString(R.string.title_buy_tickets);
+		}
+		return null;
+	}
+}

@@ -1,0 +1,119 @@
+package org.cmov.validationterminal;
+
+import java.net.URI;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+import org.cmov.validationterminal.bluetooth.BluetoothHelper;
+import org.cmov.validationterminal.bluetooth.BluetoothServerService;
+import org.json.JSONObject;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothSocket;
+import android.os.AsyncTask;
+import android.util.Log;
+
+public class ValidateTicketAsyncTask extends AsyncTask<Void, Void, Void> {
+	
+	public static enum HttpRequestType {
+		Get, Post
+	}
+	
+	/**
+	 * Constants.
+	 */
+	private static final String TAG = ValidateTicketAsyncTask.class.getSimpleName();
+	
+	/**
+	 * Instance variables.
+	 */
+	private HttpRequestType requestType = HttpRequestType.Post;
+	private String requestUrl = null;
+	private JSONObject requestData = null;
+	private JSONObject requestResult = null;
+	private BluetoothSocket socket = null;
+	
+	/**
+	 * Creates a new async task instance.
+	 */
+	public ValidateTicketAsyncTask(BluetoothSocket socket) {
+		this.socket = socket;
+	}
+	
+	/**
+	 * Sets up a progress dialog.
+	 */
+	@Override
+	protected void onPreExecute() {
+	}
+
+	/**
+	 * Accesses the REST remote API.
+	 */
+	@Override
+	protected Void doInBackground(Void... params) {
+		
+		try {
+			// Obtain client info.
+			String j = (String) BluetoothHelper.bluetoothReadObject(socket);
+			JSONObject json = new JSONObject(j);
+			String login = json.getString("login");
+			int id = json.getInt("id");
+			requestData = new JSONObject();
+			requestData.put("bus", BluetoothAdapter.getDefaultAdapter().getAddress());
+		} catch(Exception e) {
+			Log.e(TAG, "Failed to get info from client.", e);
+			return null;
+		}
+		
+		HttpContext localContext = new BasicHttpContext();
+		HttpClient client = new DefaultHttpClient();
+		HttpResponse response = null;
+		if(this.requestType == HttpRequestType.Post) {
+			try {
+				HttpPost post = new HttpPost(new URI(this.requestUrl));
+				post.setHeader("Content-type", "application/json");
+				post.setEntity(new StringEntity(this.requestData.toString(), "UTF-8"));
+				response = client.execute(post, localContext);
+			} catch (Exception e) {
+				Log.e(TAG, "Post failed.", e);
+			}
+		} else {
+			try {
+				HttpGet get = new HttpGet(new URI(this.requestUrl));
+				response = client.execute(get, localContext);
+			} catch (Exception e) {
+				Log.e(TAG, "Get failed.", e);
+			}
+		}
+		if(response != null) {
+			try {
+				this.requestResult = new JSONObject(EntityUtils.toString(response.getEntity()));
+			} catch (Exception e) {
+				Log.e(TAG, "No response.", e);
+			}
+		}
+		
+		// Respond to client.
+		try {
+			BluetoothHelper.bluetoothWriteObject(requestResult.toString(), socket);
+		} catch (Exception e) {}
+
+		return null;
+	}
+	
+	/**
+	 * Closes the progress dialog and informs the activity that
+	 * the task ended.
+	 */
+	@Override
+	protected void onPostExecute(Void result) {
+	}
+
+}

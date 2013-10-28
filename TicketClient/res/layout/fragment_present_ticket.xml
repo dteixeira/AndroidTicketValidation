@@ -10,6 +10,12 @@
     <RelativeLayout
         android:layout_height="wrap_content"
         android:layout_width="fill_parent">
+        
+        <ImageView
+	        android:id="@+id/qr_image_view"
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	        android:padding="10dp" />
 	
         <!-- Footer -->
 	    <LinearLayout android:id="@+id/footer"

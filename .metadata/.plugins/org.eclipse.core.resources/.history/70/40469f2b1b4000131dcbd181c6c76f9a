@@ -1,0 +1,41 @@
+package org.cmov.ticketclient;
+
+import java.util.ArrayList;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.view.ViewGroup;
+
+public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+	private ArrayList<Fragment> fragments = null;
+	private ArrayList<String> fragmentNames = null;
+
+	public SectionsPagerAdapter(FragmentManager fragmentManager, ArrayList<Fragment> fragments, ArrayList<String> fragmentNames) {
+		super(fragmentManager);
+		this.fragments = fragments;
+		this.fragmentNames = fragmentNames;
+	}
+
+	@Override
+	public Fragment getItem(int position) {
+		return fragments.get(position);
+	}
+
+	@Override
+	public int getCount() {
+		return fragments.size();
+	}
+	
+	@Override
+	 public Object instantiateItem(ViewGroup container, int position) {
+		Fragment fragment = (Fragment) super.instantiateItem(container, position);
+		fragments.set(position, fragment);
+		return fragment;
+	 }
+
+	@Override
+	public CharSequence getPageTitle(int position) {
+		return fragmentNames.get(position);
+	}
+}

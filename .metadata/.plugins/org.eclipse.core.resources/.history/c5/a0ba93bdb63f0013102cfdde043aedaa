@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Ticket Client</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_delete_cache">Delete Cache</string>
+    <string name="title_buy_tickets">Buy Tickets</string>
+    <string name="title_unused_tickets">View Tickets</string>
+    <string name="title_activity_register">Create an account</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="register_button">Create Account</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_password_repeat">Repeat password</string>
+    <string name="prompt_cardnumber">CC number</string>
+    <string-array name="cc_options">
+        <item >Visa</item>
+        <item >MasterCard</item>
+        
+    </string-array>
+        <string name="prompt_cardexpirationdate">CC expiration date</string>
+        <string name="title_used_tickets">History</string>
+        <string name="title_present_ticket">Present Ticket</string>
+        <string name="button_validate_content_assist">Validate</string>
+
+</resources>

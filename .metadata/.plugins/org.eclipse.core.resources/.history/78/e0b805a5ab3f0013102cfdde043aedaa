@@ -1,0 +1,23 @@
+package org.cmov.ticketclient;
+
+import android.os.Bundle;
+import android.support.v4.app.ListFragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+public class TicketUnusedFragment extends ListFragment {
+	
+	public TicketUnusedFragment() {
+		// TODO Setup fragment.
+		setRetainInstance(true);
+	}
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		// TODO Setup layout.
+		View root = inflater.inflate(R.layout.fragment_unused_tickets, container, false);
+		return root;
+	}
+
+}
