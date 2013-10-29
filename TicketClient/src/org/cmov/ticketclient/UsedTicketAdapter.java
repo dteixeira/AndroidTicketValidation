@@ -56,7 +56,7 @@ public class UsedTicketAdapter extends BaseAdapter {
 		TextView duration = (TextView) convertView.findViewById(R.id.ticket_duration);
 		TextView date = (TextView) convertView.findViewById(R.id.ticket_date);
 		duration.setText(ticket.getValidityTime() + " minutes");
-		date.setText(DateFormat.format("dd/MM/yyyy hh:mm", ticket.getValidatedAt()));
+		date.setText(DateFormat.format("dd/MM/yyyy kk:mm", ticket.getValidatedAt()));
 		switch(ticket.getValidityTime()) {
 		case 15:
 			type.setText("Ticket T1");

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/scroll" 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:fillViewport="true"
+	android:background="#dddddd" >
+	
+    <RelativeLayout
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent">
+        
+        <ImageView
+	        android:id="@+id/qr_image_view"
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	        android:padding="10dp" />
+	
+        <!-- Footer -->
+	    <LinearLayout android:id="@+id/footer"
+	        	android:orientation="vertical"
+	                android:layout_width="fill_parent"
+	                android:layout_height="90dip"
+	                android:background="@drawable/activity_background"
+	                android:layout_alignParentBottom="true"/>
+	    
+    </RelativeLayout>
+	    
+</ScrollView>

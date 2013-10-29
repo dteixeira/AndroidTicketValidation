@@ -60,5 +60,8 @@
 	<string name="barcode_image">Barcode Image</string>
 	
 	<string name="capture">Capture</string>
+	<string name="login_button">Sign In</string>
+	<string name="login_text">Already have an account? Sign in here.</string>
+	<string name="register_text">New user? Create an account here.</string>
 
 </resources>

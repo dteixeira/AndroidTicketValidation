@@ -7,7 +7,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
-
 import org.cmov.ticketclient.HttpRequestAsyncTask.HttpRequestType;
 import org.cmov.validationterminal.bluetooth.BluetoothConnectionAsyncTask;
 import org.cmov.validationterminal.bluetooth.BluetoothConnectionResultCallback;
@@ -15,19 +14,21 @@ import org.cmov.validationterminal.bluetooth.BluetoothHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.google.zxing.BarcodeFormat;
+import com.jwetherell.quick_response_code.data.Contents;
+import com.jwetherell.quick_response_code.qrcode.QRCodeEncoder;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ReceiverCallNotAllowedException;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.ListFragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
@@ -40,6 +41,8 @@ public class MainActivity extends FragmentActivity
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 	public static final String SERVER_URL = "http://192.168.1.64:4567";
+	public static final String TICKET_ID_PARAMETER = "ticket_id";
+	public static final String USER_ID_PARAMETER = "user_id";
 	public static final String TICKETS_URL = "/tickets/";
 	public static final String REGISTER_PREFS = "RegisterDone";
 	public static final String REGISTERED = "Registered";
@@ -65,13 +68,14 @@ public class MainActivity extends FragmentActivity
 	private boolean registered = false;
 	private int userId = -1;
 	private String userLogin = null;
-	public Ticket recentTicket = new Ticket();
+	private Ticket recentTicket = new Ticket();
 	
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	ArrayList<Fragment> fragments;
 	ArrayList<String> fragmentNames;
 	public UnusedTicketAdapter mUnusedTicketsAdapter;
 	public UsedTicketAdapter mUsedTicketsAdapter;
+	public Bitmap ticketQr;
 	ViewPager mViewPager;
 
 	@Override
@@ -204,11 +208,30 @@ public class MainActivity extends FragmentActivity
 			recentTicket = (Ticket) oRecent.readObject();
 			oRecent.close();
 			recent.close();
+			generateTicketQrCode();
 		} catch (FileNotFoundException e) {
 			Log.e(TAG, "No history to load.", e);
 		} catch (Exception e) {
 			Log.e(TAG, "ObjectInputStream failed.", e);
 		}
+	}
+	
+	private void generateTicketQrCode() {
+		try {
+			ticketQr = null;
+			if(recentTicket != null && recentTicket.getId() != -1) {
+				JSONObject json = new JSONObject();
+				json.put(TICKET_ID_PARAMETER, recentTicket.getId());
+				json.put(USER_ID_PARAMETER, userId);
+		    	QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(
+		    			json.toString(), 
+		    			null, 
+		    			Contents.Type.TEXT, 
+		    			BarcodeFormat.QR_CODE.toString(), 
+		    			800);
+		    	ticketQr = qrCodeEncoder.encodeAsBitmap();
+			}
+		} catch (Exception e) {}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -411,7 +434,8 @@ public class MainActivity extends FragmentActivity
 				}
 			}
 			recentTicket = ticket;
-			((TicketPresentFragment)fragments.get(2)).updateQRImage(recentTicket);
+			generateTicketQrCode();
+			((TicketPresentFragment)fragments.get(2)).updateQRImage(ticketQr);
 			mUsedTicketsAdapter.getTickets().add(ticket);
 			mUsedTicketsAdapter.notifyDataSetChanged();
 			Toast.makeText(getApplicationContext(), 

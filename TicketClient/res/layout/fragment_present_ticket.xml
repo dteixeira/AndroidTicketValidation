@@ -15,7 +15,8 @@
 	        android:id="@+id/qr_image_view"
 	        android:layout_width="fill_parent"
 	        android:layout_height="fill_parent"
-	        android:padding="10dp" />
+	        android:paddingLeft="10dp"
+	        android:paddingRight="10dp" />
 	
         <!-- Footer -->
 	    <LinearLayout android:id="@+id/footer"

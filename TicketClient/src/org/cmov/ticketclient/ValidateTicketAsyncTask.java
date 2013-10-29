@@ -80,10 +80,12 @@ public class ValidateTicketAsyncTask extends AsyncTask<Void, Void, Void> {
 	@Override
 	protected void onPostExecute(Void result) {
 		
-		// Dismiss the progress dialog.
-		if (progressDialog.isShowing()) {
-			progressDialog.dismiss();
-        }
+		try {
+			// Dismiss the progress dialog.
+			if (progressDialog.isShowing()) {
+				progressDialog.dismiss();
+	        }
+		} catch (Exception e) {}
 		
 		// Callback the task executor.
 		Log.d(TAG, "Invoking result callback.");

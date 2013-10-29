@@ -32,7 +32,9 @@ public class RegisterActivity extends Activity implements HttpRequestResultCallb
 	public static final String USER_CC_TYPE = "credit_card_type";
 	public static final String USER_CC_DATE = "credit_card_val";
 	public static final String REGISTER_ADDRESS = "/register";
+	public static final String LOGIN_ADDRESS = "/login";
 	public static final int REQUEST_SERVER_REGISTER = 100002;
+	public static final int REQUEST_SERVER_LOGIN = 100003;
 	private static final String TAG = RegisterActivity.class.getSimpleName();
 	
 	private int mYear = 0;
@@ -55,6 +57,14 @@ public class RegisterActivity extends Activity implements HttpRequestResultCallb
 		@Override
 		public void onClick(View v) {
 			validateForm();
+		}
+	};
+	
+	View.OnClickListener mLoginFormSubmit = new View.OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			validateLoginForm();
 		}
 	};
 	
@@ -81,6 +91,9 @@ public class RegisterActivity extends Activity implements HttpRequestResultCallb
 		
 		// Form submit listener.
 		findViewById(R.id.sign_in_button).setOnClickListener(mFormSubmit);
+		
+		// Login form submit listener.
+		findViewById(R.id.login_button).setOnClickListener(mLoginFormSubmit);
 		
 		// Check WIFI state.
 		checkWifiState();
@@ -121,7 +134,7 @@ public class RegisterActivity extends Activity implements HttpRequestResultCallb
 	
 	@Override
 	public void onRequestResult(boolean result, JSONObject data, int requestCode) {
-		if(requestCode == REQUEST_SERVER_REGISTER) {
+		if(requestCode == REQUEST_SERVER_REGISTER || requestCode == REQUEST_SERVER_LOGIN) {
 			if(result) {
 				try {
 					boolean status = data.getBoolean(MainActivity.REQUEST_SUCCESS);
@@ -139,10 +152,17 @@ public class RegisterActivity extends Activity implements HttpRequestResultCallb
 				        finish();
 					} else {
 						
-						// Registration failed.
-						Toast.makeText(getApplicationContext(),
-								"Your login is already being used.",
-								Toast.LENGTH_SHORT).show();
+						if(requestCode == REQUEST_SERVER_REGISTER) {
+							// Registration failed.
+							Toast.makeText(getApplicationContext(),
+									"Your login is already being used.",
+									Toast.LENGTH_SHORT).show();
+						} else {
+							// Login failed.
+							Toast.makeText(getApplicationContext(),
+									"Your credentials are invalid.",
+									Toast.LENGTH_SHORT).show();
+						}
 					}
 				} catch (Exception e) {
 					Log.e(TAG, "Error getting result.", e);
@@ -188,6 +208,42 @@ public class RegisterActivity extends Activity implements HttpRequestResultCallb
         String monthString = localMonth < 10 ? "0" + localMonth : Integer.toString(localMonth);
         String localYear = Integer.toString(mYear).substring(2);
         ((EditText) findViewById(R.id.card_date)).setText(new StringBuilder().append(monthString).append("/").append(localYear).append(" "));
+	}
+	
+	private void validateLoginForm() {
+		EditText login = (EditText) findViewById(R.id.login_login);
+		EditText password = (EditText) findViewById(R.id.login_password);
+		
+		// Validate login.
+		String sLogin = login.getText().toString().trim();
+		if(sLogin.length() < 5) {
+			showErrorToast("Please supply a valid login.");
+			return;
+		}
+		
+		// Validate password.
+		String sPassword = password.getText().toString().trim();
+		if(sPassword.length() < 5) {
+			showErrorToast("Please supply a valid password.");
+			return;
+		}
+		
+		// Try to login.
+		try {
+			// Create JSON request data.
+			JSONObject json = new JSONObject();
+			json.put(USER_LOGIN, sLogin);
+			json.put(USER_PASSWORD, sPassword);
+			
+			// Create and call HTTP request.
+			HttpRequestAsyncTask task = new HttpRequestAsyncTask(this, 
+					HttpRequestType.Post,
+					json,
+					MainActivity.SERVER_URL + LOGIN_ADDRESS,
+					"Signing in.",
+					REQUEST_SERVER_LOGIN);
+			task.execute((Void[]) null);
+		} catch (Exception e) {}
 	}
 	
 	private void validateForm() {
