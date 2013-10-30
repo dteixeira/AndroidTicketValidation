@@ -20,3 +20,7 @@
 1382994387039	Copy compilation units
 1382994403495	Rename type 'BluetoothConnectionAsyncTask'
 1382994427504	Rename type 'BluetoothConnectionResultCallback'
+1383123298982	Extracts string 'Tickets T3' into R.string.tickets_t3
+1383123314761	Extracts string 'Tickets T2' into R.string.tickets_t2
+1383123320528	Extracts string 'Tickets T1' into R.string.tickets_t1
+1383123700786	Extracts string 'Buy Tickets' into R.string.buy_tickets

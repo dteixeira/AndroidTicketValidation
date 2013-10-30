@@ -33,6 +33,8 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.NumberPicker;
 import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity 
@@ -40,7 +42,7 @@ public class MainActivity extends FragmentActivity
 		ValidateTicketResultCallback {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
-	public static final String SERVER_URL = "http://192.168.1.64:4567";
+	public static final String SERVER_URL = "http://10.13.37.84:4567";
 	public static final String TICKET_ID_PARAMETER = "ticket_id";
 	public static final String USER_ID_PARAMETER = "user_id";
 	public static final String TICKETS_URL = "/tickets/";
@@ -56,7 +58,9 @@ public class MainActivity extends FragmentActivity
 	public static final String EXTRA_QR_TICKET = "QRTicket";
 	public static final int REQUEST_REGISTER = 10001;
 	public static final int REQUEST_TICKETS = 10002;
-	public static final int REQUEST_QR_VALIDATE = 10003;
+	public static final int REQUEST_PRICE_TICKETS = 10003;
+	public static final int REQUEST_BUY_TICKETS = 10004;
+	public static final int REQUEST_QR_VALIDATE = 10005;
 	public static final String TICKETS_PARAMETER = "tickets";
 	
 	/** Private backup files **/
@@ -77,6 +81,40 @@ public class MainActivity extends FragmentActivity
 	public UsedTicketAdapter mUsedTicketsAdapter;
 	public Bitmap ticketQr;
 	ViewPager mViewPager;
+	
+	public View.OnClickListener mBuyTicketListener = new View.OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+			if(wifi != null && wifi.isWifiEnabled()) {
+				try {
+					v = (View) v.getParent();
+					int ticket_15 = ((NumberPicker) v.findViewById(R.id.ticket_15_picker)).getValue();
+					int ticket_30 = ((NumberPicker) v.findViewById(R.id.ticket_30_picker)).getValue();
+					int ticket_60 = ((NumberPicker) v.findViewById(R.id.ticket_60_picker)).getValue();
+					JSONObject json = new JSONObject();
+					json.put("ticket_15", ticket_15);
+					json.put("ticket_30", ticket_30);
+					json.put("ticket_60", ticket_60);
+					HttpRequestAsyncTask task = new HttpRequestAsyncTask(
+							MainActivity.this, 
+							HttpRequestType.Post, 
+							json, 
+							SERVER_URL + "/tickets/" + userLogin + "/price", 
+							"Retrieving the price.", 
+							REQUEST_PRICE_TICKETS);
+					task.execute((Void[]) null);
+				} catch(Exception e) {
+					Log.e(TAG, "Failed to send price request.", e);
+				}
+			} else {
+				Toast.makeText(getApplicationContext(), 
+						"You need an active network connection. " +
+						"Please enable it and try again.", Toast.LENGTH_SHORT).show();
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -305,6 +343,82 @@ public class MainActivity extends FragmentActivity
 						" " + SERVER_URL + TICKETS_URL + userLogin, e);
 				Toast.makeText(getApplicationContext(), 
 						"Failed to retrieve tickets.", 
+						Toast.LENGTH_SHORT).show();
+			}
+			break;
+			
+		case REQUEST_PRICE_TICKETS:
+			try {
+				if(!data.getBoolean("success")) {
+					Toast.makeText(getApplicationContext(), data.getString("error"), Toast.LENGTH_SHORT).show();
+				} else {
+					AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+					alertDialog.setTitle("Buy tickets");
+					alertDialog.setMessage(
+							"Tickets T1: " + data.getInt("ticket_15") + "\n" +
+							"Tickets T2: " + data.getInt("ticket_30") + "\n" +
+							"Tickets T3: " + data.getInt("ticket_60") + "\n\n" +
+							"Price: €" + data.getInt("price") + 
+							"\n\nPurchase these tickets?");
+					
+					// Back button.
+					alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "No", new AlertDialog.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface arg0, int arg1) {}
+					});
+			
+					// Ok button.
+					alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", new AlertDialog.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface arg0, int arg1) {
+							try {
+								View v = mSectionsPagerAdapter.getItem(3).getView();
+								int ticket_15 = ((NumberPicker) v.findViewById(R.id.ticket_15_picker)).getValue();
+								int ticket_30 = ((NumberPicker) v.findViewById(R.id.ticket_30_picker)).getValue();
+								int ticket_60 = ((NumberPicker) v.findViewById(R.id.ticket_60_picker)).getValue();
+								JSONObject json = new JSONObject();
+								json.put("ticket_15", ticket_15);
+								json.put("ticket_30", ticket_30);
+								json.put("ticket_60", ticket_60);
+								HttpRequestAsyncTask task = new HttpRequestAsyncTask(
+										MainActivity.this, 
+										HttpRequestType.Post, 
+										json, 
+										SERVER_URL + "/tickets/" + userLogin + "/buy", 
+										"Buying tickets.", 
+										REQUEST_BUY_TICKETS);
+								task.execute((Void[]) null);
+							} catch (Exception e) {}
+						}
+					});
+					alertDialog.show();
+				}
+			} catch (JSONException e) {
+				Log.e(TAG, "Failed to get tickets. " + data.toString() +
+						" " + SERVER_URL + TICKETS_URL + userLogin, e);
+				Toast.makeText(getApplicationContext(), 
+						"Failed to retrieve the price.", 
+						Toast.LENGTH_SHORT).show();
+			}
+			break;
+			
+		case REQUEST_BUY_TICKETS:
+			try {
+				JSONArray array = data.getJSONArray(TICKETS_PARAMETER);
+				ArrayList<Ticket> tickets = new ArrayList<Ticket>();
+				for(int i = 0; i < array.length(); ++i) {
+					tickets.add(new Ticket(array.getJSONObject(i)));
+				}
+				mUnusedTicketsAdapter.setTickets(tickets);
+				mUnusedTicketsAdapter.notifyDataSetChanged();
+				Toast.makeText(getApplicationContext(), 
+						"Tickets bought.", 
+						Toast.LENGTH_SHORT).show();
+			} catch (JSONException e) {
+				Log.e(TAG, "Failed to get tickets. " + data.toString() +
+						" " + SERVER_URL + TICKETS_URL + userLogin, e);
+				Toast.makeText(getApplicationContext(), 
+						"Failed to buy the tickets.", 
 						Toast.LENGTH_SHORT).show();
 			}
 			break;

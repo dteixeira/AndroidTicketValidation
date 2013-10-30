@@ -29,6 +29,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 			((ListFragment) fragments.get(position)).setListAdapter(activity.mUsedTicketsAdapter);
 		} else if(position == 2) {
 			((TicketPresentFragment) fragments.get(position)).ticketQr = activity.ticketQr;
+		} else if(position == 3) {
+			((TicketBuyFragment) fragments.get(position)).clickListener = activity.mBuyTicketListener;
 		}
 		return fragments.get(position);
 	}
@@ -49,6 +51,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 			((ListFragment) fragment).setListAdapter(activity.mUsedTicketsAdapter);
 		} else if(position == 2) {
 			((TicketPresentFragment) fragments.get(position)).ticketQr = activity.ticketQr;
+		} else if(position == 3) {
+			((TicketBuyFragment) fragments.get(position)).clickListener = activity.mBuyTicketListener;
 		}
 		fragments.set(position, fragment);
 		return fragment;

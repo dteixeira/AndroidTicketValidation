@@ -63,5 +63,9 @@
 	<string name="login_button">Sign In</string>
 	<string name="login_text">Already have an account? Sign in here.</string>
 	<string name="register_text">New user? Create an account here.</string>
+	<string name="tickets_t3">Tickets T3</string>
+	<string name="tickets_t2">Tickets T2</string>
+	<string name="tickets_t1">Tickets T1</string>
+	<string name="buy_tickets">Buy Tickets</string>
 
 </resources>

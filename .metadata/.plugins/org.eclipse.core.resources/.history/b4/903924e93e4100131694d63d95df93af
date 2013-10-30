@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/scroll" 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:fillViewport="true"
+	android:background="#dddddd" >
+	
+    <RelativeLayout
+        android:id="@+id/ticket_15_picker"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content">
+        
+        <NumberPicker
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+	
+        <!-- Footer -->
+	    <LinearLayout android:id="@+id/footer"
+	        	android:orientation="vertical"
+	                android:layout_width="fill_parent"
+	                android:layout_height="90dip"
+	                android:background="@drawable/activity_background"
+	                android:layout_alignParentBottom="true"/>
+	    
+    </RelativeLayout>
+	    
+</ScrollView>
