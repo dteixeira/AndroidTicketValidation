@@ -20,7 +20,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements HttpRequestResultCallback {
 
 	public static final int DOWNLOAD_DATA_CALLBACK = 1000003;
-	public static final String SERVER_URL = "http://10.13.37.84:4567";
+	public static final String SERVER_URL = "http://192.168.1.64:4567";
 	public static final String BUS_MAC_ADDRESS_PARAMETER = "bus";
 	public static final String TICKET_ID_PARAMETER = "ticket_id";
 	public static final String USER_ID_PARAMETER = "user_id";

@@ -3,26 +3,26 @@
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item value="340" key="DIALOG_WIDTH"/>
 		<item value="209" key="DIALOG_Y_ORIGIN"/>
-		<item value="397" key="DIALOG_HEIGHT"/>
 		<item value="47" key="DIALOG_X_ORIGIN"/>
+		<item value="397" key="DIALOG_HEIGHT"/>
 		<item value="1|Open Sans|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="true" key="wrap"/>
-		<item value="false" key="isRegEx"/>
 		<item value="false" key="casesensitive"/>
+		<item value="false" key="isRegEx"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="login" key="selection"/>
+		<item value="TicketsSer" key="selection"/>
 		<list key="findhistory">
+			<item value="ticketsser"/>
+			<item value="getTicketSer"/>
+			<item value="Wifi"/>
+			<item value="internet"/>
+			<item value="data connect"/>
+			<item value="onReq"/>
 			<item value="login"/>
 			<item value="milli"/>
-			<item value="va"/>
-			<item value="problem"/>
-			<item value="getTic"/>
-			<item value="onAct"/>
-			<item value="ondes"/>
-			<item value="get"/>
 		</list>
 		<list key="replacehistory">
 		</list>
