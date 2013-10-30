@@ -107,13 +107,13 @@ public class MainActivity extends Activity implements HttpRequestResultCallback 
 						((TextView) findViewById(R.id.ticket_message)).setText(
 								"TICKET ID : " + ticket.getId() + "\n" +
 								"USER ID   : " + ticket.getUserId() + "\n" +
-								"VALIDITY  : " + ticket.getValidityTime() + " minutes\n" +
+								"VALIDITY  : " + ticket.getValidityTime() + "\n" +
 								"VALIDATED : " + DateFormat.format("dd/MM/yyyy kk:mm", ticket.getValidatedAt()));
 						return;
 					} else {
 						findViewById(R.id.ticket_color).setBackgroundResource(R.color.ticket_red);
 						((TextView) findViewById(R.id.ticket_status)).setText("INVALID TICKET");
-						((TextView) findViewById(R.id.ticket_message)).setText("Ticket is no longer valid.");
+						((TextView) findViewById(R.id.ticket_message)).setText("Ticket does not belong to user.");
 						return;
 					}
 				}
@@ -159,24 +159,20 @@ public class MainActivity extends Activity implements HttpRequestResultCallback 
 		switch(requestCode) {
 		
 		case DOWNLOAD_DATA_CALLBACK:
-			if(result) {
-				try {
-					JSONArray array = data.getJSONArray(TICKETS_PARAMETER);
-					tickets = new ArrayList<Ticket>();
-					for(int i = 0; i < array.length(); ++i) {
-						tickets.add(new Ticket(array.getJSONObject(i)));
-					}
-					Toast.makeText(getApplicationContext(), 
-							"Ticket data received.", 
-							Toast.LENGTH_SHORT).show();
-				} catch (JSONException e) {
-					Log.e(TAG, "Failed to get tickets.", e);
-					Toast.makeText(getApplicationContext(), 
-							"Failed to get tickets.", 
-							Toast.LENGTH_SHORT).show();
+			try {
+				JSONArray array = data.getJSONArray(TICKETS_PARAMETER);
+				tickets = new ArrayList<Ticket>();
+				for(int i = 0; i < array.length(); ++i) {
+					tickets.add(new Ticket(array.getJSONObject(i)));
 				}
-			} else {
-				Toast.makeText(getApplicationContext(), "Failed to retrieve data.", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), 
+						"Ticket data received.", 
+						Toast.LENGTH_SHORT).show();
+			} catch (JSONException e) {
+				Log.e(TAG, "Failed to get tickets.", e);
+				Toast.makeText(getApplicationContext(), 
+						"Failed to get tickets.", 
+						Toast.LENGTH_SHORT).show();
 			}
 			break;
 			

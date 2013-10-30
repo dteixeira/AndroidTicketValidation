@@ -113,7 +113,7 @@ public class MainActivity extends Activity implements HttpRequestResultCallback 
 					} else {
 						findViewById(R.id.ticket_color).setBackgroundResource(R.color.ticket_red);
 						((TextView) findViewById(R.id.ticket_status)).setText("INVALID TICKET");
-						((TextView) findViewById(R.id.ticket_message)).setText("Ticket is no longer valid.");
+						((TextView) findViewById(R.id.ticket_message)).setText("Ticket does not belong to user.");
 						return;
 					}
 				}

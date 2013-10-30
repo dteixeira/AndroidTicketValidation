@@ -107,13 +107,13 @@ public class MainActivity extends Activity implements HttpRequestResultCallback 
 						((TextView) findViewById(R.id.ticket_message)).setText(
 								"TICKET ID : " + ticket.getId() + "\n" +
 								"USER ID   : " + ticket.getUserId() + "\n" +
-								"VALIDITY  : " + ticket.getValidityTime() + " minutes\n" +
+								"VALIDITY  : " + ticket.getValidityTime() + "\n" +
 								"VALIDATED : " + DateFormat.format("dd/MM/yyyy kk:mm", ticket.getValidatedAt()));
 						return;
 					} else {
 						findViewById(R.id.ticket_color).setBackgroundResource(R.color.ticket_red);
 						((TextView) findViewById(R.id.ticket_status)).setText("INVALID TICKET");
-						((TextView) findViewById(R.id.ticket_message)).setText("Ticket is no longer valid.");
+						((TextView) findViewById(R.id.ticket_message)).setText("Ticket does not belong to user.");
 						return;
 					}
 				}
