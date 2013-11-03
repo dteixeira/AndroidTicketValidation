@@ -30,8 +30,9 @@ public class MainActivity extends Activity {
 	 * Constant definitions.
 	 */
 	
-	public static final String SERVER_URL = "http://192.168.1.64:4567";
+	public static final String SERVER_URL = "http://10.13.37.84:4567";
 	private static final int REQUEST_ENABLE_BLUETOOTH = 10001;
+	private static final String TAG = MainActivity.class.getSimpleName();
 
 	/**
 	 * Instance variables.
